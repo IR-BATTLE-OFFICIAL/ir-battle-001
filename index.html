@@ -1054,14 +1054,12 @@
 
 <!-- LIVE TICKER BANNER -->
 <div class="live-ticker">
-    <div class="ticker-track">
-        <div class="ticker-item"><i class="fas fa-bolt"></i> 🏆 Squad Match #402 Prize Pool <span class="ticker-highlight">₹5,000</span> - Slots Filling Fast!</div>
-        <div class="ticker-item"><i class="fas fa-trophy"></i> Winner <span class="ticker-highlight">Rahul_FF</span> won <span class="ticker-highlight">₹1,200</span> in Solo Battle</div>
+    <div class="ticker-track" id="tickerTrack">
+        <div class="ticker-item"><i class="fas fa-bolt"></i> 🏆 Daily Free Fire Matches Prize Pool <span class="ticker-highlight">₹5,000</span> - Slots Filling Fast!</div>
         <div class="ticker-item"><i class="fas fa-shield-halved"></i> 100% Anti-Cheat System Active</div>
         <div class="ticker-item"><i class="fas fa-money-bill-transfer"></i> Instant 24x7 UPI Withdrawals Verified</div>
         <!-- Duplicate for continuous scroll loop -->
-        <div class="ticker-item"><i class="fas fa-bolt"></i> 🏆 Squad Match #402 Prize Pool <span class="ticker-highlight">₹5,000</span> - Slots Filling Fast!</div>
-        <div class="ticker-item"><i class="fas fa-trophy"></i> Winner <span class="ticker-highlight">Rahul_FF</span> won <span class="ticker-highlight">₹1,200</span> in Solo Battle</div>
+        <div class="ticker-item"><i class="fas fa-bolt"></i> 🏆 Daily Free Fire Matches Prize Pool <span class="ticker-highlight">₹5,000</span> - Slots Filling Fast!</div>
         <div class="ticker-item"><i class="fas fa-shield-halved"></i> 100% Anti-Cheat System Active</div>
         <div class="ticker-item"><i class="fas fa-money-bill-transfer"></i> Instant 24x7 UPI Withdrawals Verified</div>
     </div>
@@ -1325,7 +1323,7 @@
 <!-- FOOTER -->
 <footer>
     <div class="footer-socials">
-        <a href="#" id="ytLink" target="_blank" class="social-btn" title="YouTube"><i class="fab fa-youtube"></i></a>
+        <a href="https://youtube.com/@ir_battle_official?si=uyZJP_A6ocn326Ks" id="ytLink" target="_blank" class="social-btn" title="YouTube"><i class="fab fa-youtube"></i></a>
         <a href="https://www.instagram.com/ir_battle_official?stkn=cTVmdmVsdzNpbTZv" id="instaLink" target="_blank" class="social-btn" title="Instagram"><i class="fab fa-instagram"></i></a>
         <a href="https://t.me/ArenaBattleTVOfficial" id="teleLink" target="_blank" class="social-btn" title="Telegram"><i class="fab fa-telegram"></i></a>
         <a href="https://whatsapp.com/channel/0029VbCMxXV5Ejxq0XOsue0g" id="waLink" target="_blank" class="social-btn" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
@@ -1472,6 +1470,32 @@
             try { await setDoc(configRef, { visitCount: increment(1) }, { merge: true }); } catch(e){}
         }
 
+        let realWithdrawalsList = [];
+
+        function updateLiveTicker() {
+            const track = document.getElementById('tickerTrack');
+            if (!track) return;
+
+            let htmlItems = '';
+
+            // Render real withdrawal records from Firestore
+            if (realWithdrawalsList && realWithdrawalsList.length > 0) {
+                realWithdrawalsList.forEach(w => {
+                    const amt = formatNumber(w.amount);
+                    const name = w.userName || 'Gamer';
+                    htmlItems += `<div class="ticker-item"><i class="fas fa-trophy" style="color:var(--primary);"></i> Winner <span class="ticker-highlight">${name}</span> withdrew <span class="ticker-highlight">₹${amt}</span> via UPI</div>`;
+                });
+            }
+
+            // Platform trust items
+            htmlItems += `<div class="ticker-item"><i class="fas fa-bolt"></i> 🏆 Daily Free Fire Matches Prize Pool <span class="ticker-highlight">₹5,000</span> - Slots Filling Fast!</div>`;
+            htmlItems += `<div class="ticker-item"><i class="fas fa-shield-halved"></i> 100% Anti-Cheat System Active</div>`;
+            htmlItems += `<div class="ticker-item"><i class="fas fa-money-bill-transfer"></i> Instant 24x7 UPI Withdrawals Verified</div>`;
+
+            // Duplicate HTML items to create seamless infinite scrolling loop
+            track.innerHTML = htmlItems + htmlItems;
+        }
+
         // 1. REAL APP USERS COUNT (from 'users' collection)
         try {
             onSnapshot(collection(db, "users"), (snap) => {
@@ -1480,20 +1504,68 @@
             }, (err) => console.error("Users snapshot err:", err));
         } catch(e) {}
 
-        // 2. REAL APP WINNINGS (from approved 'withdrawals' collection)
+        let rawApprovedWithdrawals = [];
+
+        function processWithdrawalsData() {
+            let totalPaid = 0;
+            realWithdrawalsList = [];
+            const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+            rawApprovedWithdrawals.forEach(item => {
+                totalPaid += item.amount;
+                if (item.docDate && item.docDate >= twentyFourHoursAgo) {
+                    realWithdrawalsList.push(item);
+                }
+            });
+
+            // Sort newest first
+            realWithdrawalsList.sort((a, b) => (b.docDate ? b.docDate.getTime() : 0) - (a.docDate ? a.docDate.getTime() : 0));
+
+            realWinningsSum = totalPaid;
+            updateUIStats();
+            updateLiveTicker();
+        }
+
+        // 2. REAL APP WITHDRAWALS & LIVE TICKER (from 'withdrawals' collection)
         try {
             onSnapshot(collection(db, "withdrawals"), (snap) => {
-                let totalPaid = 0;
+                rawApprovedWithdrawals = [];
                 snap.forEach(doc => {
                     const data = doc.data();
-                    if (data.status === 'approved' || data.status === 'completed' || data.status === 'success') {
-                        totalPaid += Number(data.amount || 0);
+                    const amt = Number(data.amount || 0);
+                    const isApproved = (data.status === 'approved' || data.status === 'completed' || data.status === 'success');
+                    
+                    if (isApproved) {
+                        const rawTime = data.updatedAt || data.dateTime;
+                        let docDate = null;
+                        if (rawTime) {
+                            if (typeof rawTime.toDate === 'function') {
+                                docDate = rawTime.toDate();
+                            } else if (rawTime.seconds) {
+                                docDate = new Date(rawTime.seconds * 1000);
+                            } else {
+                                docDate = new Date(rawTime);
+                            }
+                        }
+                        rawApprovedWithdrawals.push({
+                            userName: data.userName || data.name || data.userMobile || 'Gamer',
+                            amount: amt,
+                            status: data.status,
+                            docDate: docDate
+                        });
                     }
                 });
-                realWinningsSum = totalPaid;
-                updateUIStats();
+
+                processWithdrawalsData();
             }, (err) => console.error("Withdrawals snapshot err:", err));
         } catch(e) {}
+
+        // Re-filter 24-hour window every 60 seconds so old withdrawals reset/expire automatically without page refresh
+        setInterval(() => {
+            if (rawApprovedWithdrawals.length > 0) {
+                processWithdrawalsData();
+            }
+        }, 60000);
 
         // 3. APP CONFIG & SOCIAL LINKS (from 'settings/app_config')
         onSnapshot(configRef, (snap) => {
