@@ -1325,10 +1325,11 @@
 <!-- FOOTER -->
 <footer>
     <div class="footer-socials">
-        <a href="#" id="ytLink" target="_blank" class="social-btn"><i class="fab fa-youtube"></i></a>
-        <a href="#" id="instaLink" target="_blank" class="social-btn"><i class="fab fa-instagram"></i></a>
-        <a href="#" id="teleLink" target="_blank" class="social-btn"><i class="fab fa-telegram"></i></a>
-        <a href="#" id="waLink" target="_blank" class="social-btn"><i class="fab fa-whatsapp"></i></a>
+        <a href="#" id="ytLink" target="_blank" class="social-btn" title="YouTube"><i class="fab fa-youtube"></i></a>
+        <a href="https://www.instagram.com/ir_battle_official?stkn=cTVmdmVsdzNpbTZv" id="instaLink" target="_blank" class="social-btn" title="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="https://t.me/ArenaBattleTVOfficial" id="teleLink" target="_blank" class="social-btn" title="Telegram"><i class="fab fa-telegram"></i></a>
+        <a href="https://whatsapp.com/channel/0029VbCMxXV5Ejxq0XOsue0g" id="waLink" target="_blank" class="social-btn" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        <a href="https://www.facebook.com/share/198zG8oFLu/" id="fbLink" target="_blank" class="social-btn" title="Facebook"><i class="fab fa-facebook"></i></a>
     </div>
 
     <div class="footer-links">
@@ -1494,7 +1495,8 @@
                 if (d.youtubeUrl) document.getElementById('ytLink').href = d.youtubeUrl;
                 if (d.instagramUrl) document.getElementById('instaLink').href = d.instagramUrl;
                 if (d.telegramUrl) document.getElementById('teleLink').href = d.telegramUrl;
-                if (d.whatsappUrl) document.getElementById('waLink').href = d.whatsappUrl;
+                if (d.whatsappUrl || d.whatsappChannelUrl) document.getElementById('waLink').href = d.whatsappUrl || d.whatsappChannelUrl;
+                if (d.facebookUrl && document.getElementById('fbLink')) document.getElementById('fbLink').href = d.facebookUrl;
                 
                 updateUIStats();
             }
