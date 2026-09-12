@@ -1513,7 +1513,9 @@
 
             rawApprovedWithdrawals.forEach(item => {
                 totalPaid += item.amount;
-                if (item.docDate && item.docDate >= twentyFourHoursAgo) {
+                // Show in ticker if: no date info (always show), OR within last 24 hours
+                const withinWindow = !item.docDate || item.docDate >= twentyFourHoursAgo;
+                if (withinWindow) {
                     realWithdrawalsList.push(item);
                 }
             });
