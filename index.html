@@ -1447,6 +1447,11 @@
         let realUsersCount = 0;
         let realWinningsSum = 0;
 
+        // Render usable values immediately, then replace them with live Firebase data.
+        document.getElementById('downloadCount').innerText = '0+';
+        document.getElementById('visitCount').innerText = '0+';
+        document.getElementById('totalWinnings').innerText = '₹0+';
+
         function updateUIStats() {
             const finalDownloads = Math.max(realUsersCount, baseDownloads);
             const finalWinnings = baseWinnings + realWinningsSum;
@@ -1466,7 +1471,7 @@
             onSnapshot(collection(db, "users"), (snap) => {
                 realUsersCount = snap.size;
                 updateUIStats();
-            }, (err) => console.log("Users snapshot err:", err));
+            }, (err) => console.error("Users snapshot err:", err));
         } catch(e) {}
 
         // 2. REAL APP WINNINGS (from approved 'withdrawals' collection)
@@ -1481,7 +1486,7 @@
                 });
                 realWinningsSum = totalPaid;
                 updateUIStats();
-            }, (err) => console.log("Withdrawals snapshot err:", err));
+            }, (err) => console.error("Withdrawals snapshot err:", err));
         } catch(e) {}
 
         // 3. APP CONFIG & SOCIAL LINKS (from 'settings/app_config')
@@ -1500,7 +1505,7 @@
                 
                 updateUIStats();
             }
-        });
+        }, (err) => console.error("App config snapshot err:", err));
 
         // 4. RATING LISTENER (from 'website_reviews')
         onSnapshot(collection(db, "website_reviews"), (snap) => {
