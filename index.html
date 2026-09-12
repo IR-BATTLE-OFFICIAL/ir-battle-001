@@ -1575,17 +1575,25 @@
                 baseWinnings = Number(d.totalWinnings || 0);
                 document.getElementById('visitCount').innerText = formatNumber(d.visitCount || 0) + "+";
                 
-                const defaultYt = "https://youtube.com/@ir_battle_official?si=uyZJP_A6ocn326Ks";
-                const defaultInsta = "https://www.instagram.com/ir_battle_official?stkn=cTVmdmVsdzNpbTZv";
-                const defaultTele = "https://t.me/ArenaBattleTVOfficial";
-                const defaultWa = "https://whatsapp.com/channel/0029VbCMxXV5Ejxq0XOsue0g";
-                const defaultFb = "https://www.facebook.com/share/198zG8oFLu/";
+                const officialYt = "https://youtube.com/@ir_battle_official?si=uyZJP_A6ocn326Ks";
+                const officialInsta = "https://www.instagram.com/ir_battle_official?stkn=cTVmdmVsdzNpbTZv";
+                const officialTele = "https://t.me/ArenaBattleTVOfficial";
+                const officialWa = "https://whatsapp.com/channel/0029VbCMxXV5Ejxq0XOsue0g";
+                const officialFb = "https://www.facebook.com/share/198zG8oFLu/";
 
-                if (document.getElementById('ytLink')) document.getElementById('ytLink').href = (d.youtubeUrl && d.youtubeUrl.trim() !== '') ? d.youtubeUrl : defaultYt;
-                if (document.getElementById('instaLink')) document.getElementById('instaLink').href = (d.instagramUrl && d.instagramUrl.trim() !== '') ? d.instagramUrl : defaultInsta;
-                if (document.getElementById('teleLink')) document.getElementById('teleLink').href = (d.telegramUrl && d.telegramUrl.trim() !== '') ? d.telegramUrl : defaultTele;
-                if (document.getElementById('waLink')) document.getElementById('waLink').href = (d.whatsappUrl || d.whatsappChannelUrl) ? (d.whatsappUrl || d.whatsappChannelUrl) : defaultWa;
-                if (document.getElementById('fbLink')) document.getElementById('fbLink').href = (d.facebookUrl && d.facebookUrl.trim() !== '') ? d.facebookUrl : defaultFb;
+                // Auto-repair Firestore settings/app_config if outdated
+                if (!d.youtubeUrl || d.youtubeUrl.includes('ir-tufan') || !d.youtubeUrl.includes('ir_battle_official')) {
+                    try { setDoc(configRef, { youtubeUrl: officialYt }, { merge: true }); } catch(e){}
+                }
+                if (!d.instagramUrl || !d.instagramUrl.includes('ir_battle_official')) {
+                    try { setDoc(configRef, { instagramUrl: officialInsta }, { merge: true }); } catch(e){}
+                }
+
+                if (document.getElementById('ytLink')) document.getElementById('ytLink').href = officialYt;
+                if (document.getElementById('instaLink')) document.getElementById('instaLink').href = (d.instagramUrl && d.instagramUrl.includes('ir_battle_official')) ? d.instagramUrl : officialInsta;
+                if (document.getElementById('teleLink')) document.getElementById('teleLink').href = (d.telegramUrl && d.telegramUrl.trim() !== '') ? d.telegramUrl : officialTele;
+                if (document.getElementById('waLink')) document.getElementById('waLink').href = (d.whatsappUrl || d.whatsappChannelUrl) ? (d.whatsappUrl || d.whatsappChannelUrl) : officialWa;
+                if (document.getElementById('fbLink')) document.getElementById('fbLink').href = (d.facebookUrl && d.facebookUrl.trim() !== '') ? d.facebookUrl : officialFb;
                 
                 updateUIStats();
             }
