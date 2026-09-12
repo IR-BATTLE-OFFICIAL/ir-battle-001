@@ -1575,11 +1575,17 @@
                 baseWinnings = Number(d.totalWinnings || 0);
                 document.getElementById('visitCount').innerText = formatNumber(d.visitCount || 0) + "+";
                 
-                if (d.youtubeUrl) document.getElementById('ytLink').href = d.youtubeUrl;
-                if (d.instagramUrl) document.getElementById('instaLink').href = d.instagramUrl;
-                if (d.telegramUrl) document.getElementById('teleLink').href = d.telegramUrl;
-                if (d.whatsappUrl || d.whatsappChannelUrl) document.getElementById('waLink').href = d.whatsappUrl || d.whatsappChannelUrl;
-                if (d.facebookUrl && document.getElementById('fbLink')) document.getElementById('fbLink').href = d.facebookUrl;
+                const defaultYt = "https://youtube.com/@ir_battle_official?si=uyZJP_A6ocn326Ks";
+                const defaultInsta = "https://www.instagram.com/ir_battle_official?stkn=cTVmdmVsdzNpbTZv";
+                const defaultTele = "https://t.me/ArenaBattleTVOfficial";
+                const defaultWa = "https://whatsapp.com/channel/0029VbCMxXV5Ejxq0XOsue0g";
+                const defaultFb = "https://www.facebook.com/share/198zG8oFLu/";
+
+                if (document.getElementById('ytLink')) document.getElementById('ytLink').href = (d.youtubeUrl && d.youtubeUrl.trim() !== '') ? d.youtubeUrl : defaultYt;
+                if (document.getElementById('instaLink')) document.getElementById('instaLink').href = (d.instagramUrl && d.instagramUrl.trim() !== '') ? d.instagramUrl : defaultInsta;
+                if (document.getElementById('teleLink')) document.getElementById('teleLink').href = (d.telegramUrl && d.telegramUrl.trim() !== '') ? d.telegramUrl : defaultTele;
+                if (document.getElementById('waLink')) document.getElementById('waLink').href = (d.whatsappUrl || d.whatsappChannelUrl) ? (d.whatsappUrl || d.whatsappChannelUrl) : defaultWa;
+                if (document.getElementById('fbLink')) document.getElementById('fbLink').href = (d.facebookUrl && d.facebookUrl.trim() !== '') ? d.facebookUrl : defaultFb;
                 
                 updateUIStats();
             }
