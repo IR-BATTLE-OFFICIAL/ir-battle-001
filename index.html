@@ -1398,7 +1398,9 @@
     // Track Download
     const downloadBtns = document.querySelectorAll('a[href="IR-BATTLE.apk"]');
     downloadBtns.forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', async (event) => {
+            event.preventDefault();
+            const downloadUrl = btn.href;
             try {
                 const configRef = doc(db, "settings", "app_config");
                 await setDoc(configRef, { downloadCount: increment(1) }, { merge: true });
@@ -1406,7 +1408,11 @@
                     timestamp: serverTimestamp(),
                     userAgent: navigator.userAgent
                 });
-            } catch(e) {}
+            } catch(e) {
+                console.error("Download tracking error:", e);
+            } finally {
+                window.location.href = downloadUrl;
+            }
         });
     });
 
