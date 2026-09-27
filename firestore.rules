@@ -19,7 +19,26 @@ service cloud.firestore {
     // Users
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow write: if isOwner(userId) || isAdmin();
+      allow create: if isSignedIn();
+      allow update: if isOwner(userId) || isAdmin() ||
+        (isSignedIn() &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['balance', 'totalReferrals', 'referralEarnings', 'unreadNotifications', 'referralRewardClaimed', 'deviceId', 'playerCount']));
+      allow delete: if isAdmin();
+
+      // Nested AI Chat History
+      match /ai_messages/{messageId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // Pending Referrals (Refer & Earn system)
+    match /pending_referrals/{pendingId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() &&
+        (resource.data.referrerUid == request.auth.uid || resource.data.newUserId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
     }
 
     // Tournaments
@@ -30,13 +49,17 @@ service cloud.firestore {
         (isSignedIn() &&
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['filledSlots', 'joinedCount']));
+
+      // Subcollection slots
+      match /slots/{slotId} {
+        allow read, write: if isSignedIn();
+      }
     }
 
     // Registrations
     match /registrations/{regId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() &&
-        (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
       allow update, delete: if isAdmin();
     }
 
@@ -51,8 +74,7 @@ service cloud.firestore {
     // Transactions
     match /transactions/{txId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn() &&
-        (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
       allow update, delete: if isAdmin();
     }
 
@@ -70,6 +92,13 @@ service cloud.firestore {
       allow create: if isSignedIn() &&
         (request.resource.data.userId == request.auth.uid || isAdmin());
       allow update, delete: if isAdmin();
+    }
+
+    // Bank Receipts (Auto UTR Verification)
+    match /bank_receipts/{receiptId} {
+      allow read: if isSignedIn();
+      allow update: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     // Results
@@ -98,21 +127,19 @@ service cloud.firestore {
 
     // App Config / Settings
     match /settings/{docId} {
-      // Existing signed-in rule preserved. The website needs app_config only.
-      allow read: if isSignedIn();
-      allow read: if docId == 'app_config';
+      allow read: if isSignedIn() || docId == 'app_config';
       allow write: if isAdmin();
 
       // Website counters can be incremented without exposing other settings.
       allow create: if docId == 'app_config' &&
-        request.resource.data.keys().hasOnly(['downloadCount', 'visitCount']);
+        request.resource.data.keys().hasOnly(['downloadCount', 'visitCount', 'playerCount']);
       allow update: if docId == 'app_config' &&
         request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['downloadCount', 'visitCount']);
+          .hasOnly(['downloadCount', 'visitCount', 'playerCount']);
     }
 
     match /app_config/{configId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() || configId == 'app_config';
       allow write: if isAdmin();
     }
 
